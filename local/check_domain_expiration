@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -e
+
+print_usage () {
+  echo "Usage: check_domain_expiration [-w DAYS] [-c DAYS] [-e DAYS] -d domain1.com [-d domain2.com ...]"
+}
+
+WARNING=0
+CRIT=0
+EXPIRY=0
+DELAY=0.1
+
+while getopts d:w:c:e: opt; do
+  case $opt in
+  d) DOMAINS+=("$OPTARG") ;;
+  w) WARNING="$OPTARG" ;;
+  c) CRIT="$OPTARG" ;;
+  e) EXPIRY="$OPTARG" ;;
+  *) echo "Invalid option: $opt" ; print_usage ; exit 255 ;;
+  esac
+done
+
+if [ "${#DOMAINS[@]}" -eq 0 ]; then
+  print_usage
+  exit 0
+fi
+
+[ "$EXPIRY" -eq 0 ] && EXPIRY=1
+[ "$CRIT" -eq 0 ] && CRIT=15
+[ "$WARNING" -eq 0 ] && WARNING=30
+
+for domain in "${DOMAINS[@]}"; do
+
+  #echo $domain
+
+  expiration_date=$(whois "$domain" | grep "Expir" | grep -E -m 1 -o '[[:digit:]]{1,4}\-[[:digit:]]{1,2}\-[[:digit:]]{1,2}|[[:digit:]]{1,4}\-[[:alpha:]]{3}\-[[:digit:]]{1,2}|[[:alpha:]]{3} [[:alpha:]]{3} [[:digit:]]{2} [[:digit:]]{2}\:[[:digit:]]{2}\:[[:digit:]]{2} [[:alpha:]]{3} [[:digit:]]{4}')
+  timestamp_now=$(date +"%Y%m%d")
+  timestamp_expiration=$(date -d "$expiration_date" +"%Y%m%d")
+
+  days_left=$((($(date -ud "$timestamp_expiration" +'%s') - $(date -ud "$timestamp_now" +'%s')) / 60 / 60 / 24))
+
+  status_code=0
+  description="Domain $domain expires in $days_left days (expiration date: $expiration_date)"
+
+  if [ "$days_left" -lt "$WARNING" ]; then
+    status_code=1
+  fi
+
+  if [ "$days_left" -lt "$CRIT" ]; then
+    status_code=2
+  fi
+
+  if [ "$days_left" -lt "$EXPIRY" ]; then
+    status_code=2
+    description="Domain $domain has expired!"
+  fi
+
+  echo "$status_code Domain_Expiration_$domain count=$days_left;$CRIT;$WARNING;$EXPIRY; $description"
+
+  sleep "$DELAY"
+
+done
