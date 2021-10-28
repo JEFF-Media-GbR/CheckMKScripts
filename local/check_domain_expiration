@@ -1,15 +1,17 @@
 #!/bin/bash
 
+DOMAINS=(google.com apple.com)
+WARNING=30
+CRIT=15
+EXPIRY=1
+DELAY=0.1
+
 set -e
 
 print_usage () {
-  echo "Usage: check_domain_expiration [-w DAYS] [-c DAYS] [-e DAYS] -d domain1.com [-d domain2.com ...]"
+  #echo "Usage: check_domain_expiration [-w DAYS] [-c DAYS] [-e DAYS] -d domain1.com [-d domain2.com ...]"
+  echo: "No domains defined."
 }
-
-WARNING=0
-CRIT=0
-EXPIRY=0
-DELAY=0.1
 
 while getopts d:w:c:e: opt; do
   case $opt in
