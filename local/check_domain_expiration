@@ -58,7 +58,7 @@ for domain in "${DOMAINS[@]}"; do
     description="Domain $domain has expired!"
   fi
 
-  echo "$status_code Domain_Expiration_$domain count=$days_left;$CRIT;$WARNING;$EXPIRY; $description"
+  echo "$status_code \"Domain Expiration - $domain\" count=$days_left;$CRIT;$WARNING;$EXPIRY; $description"
 
   sleep "$DELAY"
 
